@@ -1,5 +1,6 @@
 package com.example.networkapp
 
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
@@ -14,9 +15,18 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
+import java.lang.StringBuilder
 
 // TODO (1: Fix any bugs)
 // TODO (2: Add function saveComic(...) to save and load comic info automatically when app starts)
+
+private const val COMIC_TITLE_KEY = "comic_title"
+private const val COMIC_DESC_KEY = "comic_desc"
+private const val COMIC_IMAGE_KEY = "comic_image"
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,9 +37,13 @@ class MainActivity : AppCompatActivity() {
     lateinit var showButton: Button
     lateinit var comicImageView: ImageView
 
+    private lateinit var preferences: SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        preferences = getPreferences(MODE_PRIVATE)
 
         requestQueue = Volley.newRequestQueue(this)
 
@@ -42,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         showButton.setOnClickListener {
             downloadComic(numberEditText.text.toString())
         }
+
+        loadComic()
 
     }
 
@@ -57,7 +73,22 @@ class MainActivity : AppCompatActivity() {
         titleTextView.text = comicObject.getString("title")
         descriptionTextView.text = comicObject.getString("alt")
         Picasso.get().load(comicObject.getString("img")).into(comicImageView)
+
+        saveComic(comicObject.getString("title"), comicObject.getString("alt"), comicObject.getString("img"))
     }
 
+    private fun saveComic(title: String, description: String, image: String) {
+        val editor = preferences.edit()
+        editor.putString(COMIC_TITLE_KEY, title)
+        editor.putString(COMIC_DESC_KEY, description)
+        editor.putString(COMIC_IMAGE_KEY, image)
+        editor.apply()
+    }
+
+    private fun loadComic() {
+        titleTextView.text = preferences.getString(COMIC_TITLE_KEY, "")
+        descriptionTextView.text = preferences.getString(COMIC_DESC_KEY, "")
+        Picasso.get().load(preferences.getString(COMIC_IMAGE_KEY, "")).into(comicImageView)
+    }
 
 }
